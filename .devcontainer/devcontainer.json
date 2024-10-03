@@ -1,0 +1,51 @@
+{
+  "name": "Culi Chatbot",
+  "dockerComposeFile": "docker-compose.yaml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  "features": {
+    "ghcr.io/devcontainers-contrib/features/poetry:2": {
+      "version": "1.6.1"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "18"
+    },
+    "ghcr.io/devcontainers-contrib/features/pnpm:2": {}
+  },
+  "customizations": {
+    "codespaces": {
+      "openFiles": ["DEVELOPMENT.md"]
+    },
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "autoOpenWorkspace.enableAutoOpenAlwaysFirst": true
+      },
+      "extensions": [
+        "EditorConfig.EditorConfig",
+        "ms-python.python",
+        "charliermarsh.ruff",
+        "ms-python.mypy-type-checker",
+        "littlefoxteam.vscode-python-test-adapter",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "zoma.vscode-auto-open-workspace"
+      ]
+    }
+  },
+  "postCreateCommand": "bash /workspace/.devcontainer/post-create.sh",
+  "forwardPorts": [3000, 5432, 8080],
+  "portsAttributes": {
+    "3000": {
+      "label": "Web",
+      "onAutoForward": "ignore"
+    },
+    "5432": {
+      "label": "Database"
+    },
+    "8080": {
+      "label": "API",
+      "onAutoForward": "ignore"
+    }
+  }
+}

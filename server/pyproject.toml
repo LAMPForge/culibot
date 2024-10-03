@@ -6,7 +6,7 @@ authors = ["Dai Nguyen Trong <ngtrdai@hotmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 fastapi = "^0.115.0"
 uvicorn = "^0.31.0"
 pydantic = {extras = ["email"], version = "^2.9.2"}
@@ -18,7 +18,33 @@ alembic = "^1.13.3"
 sqlalchemy-utils = "^0.41.2"
 typer = "^0.12.5"
 structlog = "^24.4.0"
+pyjwt = "^2.6.0"
+jinja2 = "^3.1.4"
+resend = "^2.4.0"
+safe-redirect-url = "^0.1.1"
+python-multipart = "^0.0.12"
+asyncpg = "^0.29.0"
+psycopg2-binary = "^2.9.9"
 
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.6.8"
+
+[tool.ruff]
+target-version = "py311"
+
+[tool.ruff.lint]
+  extend-select = ["I", "UP", "T20"]
+  ignore = [
+      "F841", # remove unused variables
+  ]
+
+[tool.ruff.lint.per-file-ignores]
+  "migrations/*" = [
+      "F401", # remove unused import
+  ]
+  "scripts/*" = [
+      "T20"
+  ]
 
 [build-system]
 requires = ["poetry-core"]

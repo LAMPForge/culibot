@@ -1,3 +1,4 @@
+import contextlib
 from typing import TypedDict, AsyncIterator
 
 import structlog
@@ -10,12 +11,13 @@ from culi.common.cors import CORSConfig, CORSMatcherMiddleware
 from culi.logging import Logger
 from culi.middlewares import PathRewriteMiddleware
 from culi.openapi import set_openapi_generator, OPENAPI_PARAMETERS, APITag
+from culi.postgres import create_sync_engine, create_async_engine
 from culi.routing import APIRoute
 from culi.common.db.postgres import (
     AsyncEngine,
     AsyncSessionMaker,
     Engine,
-    SyncSessionMaker,
+    SyncSessionMaker, create_async_sessionmaker, create_sync_sessionmaker,
 )
 from culi.health.endpoints import router as health_router
 from culi.api import router
@@ -55,7 +57,7 @@ def configure_cors(app: FastAPI) -> None:
 
 
 def generate_unique_openapi_id(route: APIRoute) -> str:
-    parts = [str(tag) for tag in route.tags if tag not in APITag] + [route.name]
+    parts = [str(tag) for tag in route.tags if tag not in {tag.value for tag in APITag}] + [route.name]
     return ":".join(parts)
 
 
@@ -66,8 +68,36 @@ class State(TypedDict):
     sync_sessionmaker: SyncSessionMaker
 
 
+@contextlib.asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[State]:
+    log.info("Starting Culi Chatbot API")
+    async_engine = create_async_engine("main")
+    async_sessionmaker = create_async_sessionmaker(async_engine)
+
+    sync_engine = create_sync_engine("main")
+    sync_sessionmaker = create_sync_sessionmaker(sync_engine)
+
+    log.info("Culi Chatbot API started")
+
+    yield {
+        "async_engine": async_engine,
+        "async_sessionmaker": async_sessionmaker,
+        "sync_engine": sync_engine,
+        "sync_sessionmaker": sync_sessionmaker,
+    }
+
+    await async_engine.dispose()
+    sync_engine.dispose()
+
+    log.info("Culi Chatbot API stopped")
+
+
 def create_app() -> FastAPI:
-    app = FastAPI(**OPENAPI_PARAMETERS)
+    app = FastAPI(
+        generate_unique_id_function=generate_unique_openapi_id,
+        lifespan=lifespan,
+        **OPENAPI_PARAMETERS
+    )
     configure_cors(app)
 
     app.add_middleware(PathRewriteMiddleware, pattern=r"^/api/v1", replacement="/v1")
@@ -81,7 +111,7 @@ def create_app() -> FastAPI:
     return app
 
 
-configure_logging(logfire=True)
+configure_logging(logfire=False)
 
 app = create_app()
 set_openapi_generator(app)

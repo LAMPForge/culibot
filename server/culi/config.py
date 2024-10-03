@@ -9,6 +9,11 @@ class Environment(StrEnum):
     production = "production"
 
 
+class EmailSender(StrEnum):
+    logger = "logger"
+    resend = "resend"
+
+
 env = Environment(os.getenv("CULI_ENV", Environment.development))
 env_file = ".env"
 
@@ -30,16 +35,28 @@ class Settings(BaseSettings):
     AUTH_COOKIE_TTL_SECONDS: int = 60 * 60 * 24 * 31  # 31 days
     AUTH_COOKIE_DOMAIN: str = "127.0.0.1"
 
+    # Auth Link
+    AUTH_LINK_TTL_SECONDS: int = 60 * 60  # 1 hour
+
+    # Emails
+    EMAIL_SENDER: EmailSender = EmailSender.logger
+    RESEND_API_KEY: str = ""
+    EMAIL_FROM_NAME: str = "Polar"
+    EMAIL_FROM_EMAIL_ADDRESS: str = "culi@lampforge.com"
+
     BASE_URL: str = "http://127.0.0.1:8000/v1"
     FRONTEND_BASE_URL: str = "http://127.0.0.1:3000"
     FRONTEND_DEFAULT_RETURN_PATH: str = "/"
 
     # Database
-    POSTGRES_USER: str = "culi"
-    POSTGRES_PWD: str = "culi"
+    POSTGRES_USER: str = "postgres"
+    POSTGRES_PWD: str = "root"
     POSTGRES_HOST: str = "127.0.0.1"
     POSTGRES_PORT: int = 5432
     POSTGRES_DATABASE: str = "culi"
+    DATABASE_POOL_SIZE: int = 5
+    DATABASE_SYNC_POOL_SIZE: int = 1  # Specific pool size for sync connection: since we only use it in OAuth2 router, don't waste resources.
+    DATABASE_POOL_RECYCLE_SECONDS: int = 600  # 10 minutes
 
     model_config = SettingsConfigDict(
         env_prefix="polar_",

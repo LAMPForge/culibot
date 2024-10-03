@@ -4,6 +4,7 @@ from typing import Any, ParamSpec, TypeVar
 from fastapi.routing import APIRoute
 from collections.abc import Callable
 from fastapi import APIRouter as _APIRouter
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class AutoCommitAPIRoute(APIRoute):

@@ -1,11 +1,34 @@
 from datetime import datetime
+from typing import Annotated
 
+from email_validator import EmailNotValidError
 from pydantic import (
     UUID4,
     BaseModel,
     ConfigDict,
     Field,
+    EmailStr,
+    AfterValidator
 )
+from pydantic_core import PydanticCustomError
+
+from culi.common.email import validate_email
+
+
+def _validate_email_dns(email: str) -> str:
+    try:
+        validate_email(email)
+    except EmailNotValidError as e:
+        raise PydanticCustomError(
+            "value_error",
+            "value is not a valid email address: {reason}",
+            {"reason": str(e)},
+        ) from e
+    else:
+        return email
+
+
+EmailStrDNS = Annotated[EmailStr, AfterValidator(_validate_email_dns)]
 
 
 class Schema(BaseModel):

@@ -8,9 +8,10 @@ from culi.auth.scope import RESERVED_SCOPES, Scope
 from culi.config import settings
 from culi.exceptions import NotPermitted, Unauthorized
 from culi.postgres import AsyncSession, get_db_session
-from culi.sentry import set_sentry_user
+from .models import AuthMethod, AuthSubject, Anonymous, SubjectType, SUBJECTS, Subject, is_anonymous
 
 from .service import AuthService
+from ..models.user import User
 
 
 async def _get_cookie_token(request: Request) -> str | None:
@@ -19,44 +20,13 @@ async def _get_cookie_token(request: Request) -> str | None:
 
 async def get_auth_subject(
     cookie_token: str | None = Depends(_get_cookie_token),
-    oauth2_credentials: tuple[OAuth2Token | None, bool] = Depends(get_optional_token),
-    personal_access_token_credentials: tuple[
-        PersonalAccessToken | None, bool
-    ] = Depends(get_optional_personal_access_token),
     session: AsyncSession = Depends(get_db_session),
 ) -> AuthSubject[Subject]:
     if cookie_token is not None:
         user = await AuthService.get_user_from_cookie(session, cookie=cookie_token)
         if user:
             scopes = {Scope.web_default}
-            if user.github_username in {
-                "birkjernstrom",
-                "frankie567",
-                "emilwidlund",
-            }:
-                scopes.add(Scope.admin)
             return AuthSubject(user, scopes, AuthMethod.COOKIE)
-
-    oauth2_token, oauth2_authorization_set = oauth2_credentials
-    personal_access_token, personal_access_token_authorization_set = (
-        personal_access_token_credentials
-    )
-
-    if oauth2_token:
-        return AuthSubject(
-            oauth2_token.sub, oauth2_token.scopes, AuthMethod.OAUTH2_ACCESS_TOKEN
-        )
-
-    if personal_access_token:
-        return AuthSubject(
-            personal_access_token.user,
-            personal_access_token.scopes,
-            AuthMethod.PERSONAL_ACCESS_TOKEN,
-        )
-
-    if oauth2_authorization_set or personal_access_token_authorization_set:
-        raise InvalidTokenError()
-
     return AuthSubject(Anonymous(), set(), AuthMethod.NONE)
 
 
@@ -73,19 +43,11 @@ class _Authenticator:
     async def __call__(
         self, auth_subject: AuthSubject[Subject]
     ) -> AuthSubject[Subject]:
-        # Anonymous
         if is_anonymous(auth_subject):
             if Anonymous in self.allowed_subjects:
                 return auth_subject
             else:
                 raise Unauthorized()
-
-        set_sentry_user(auth_subject)
-
-        # Blocked subjects
-        blocked_at = getattr(auth_subject.subject, "blocked_at", None)
-        if blocked_at is not None:
-            raise NotPermitted()
 
         # Not allowed subject
         subject_type = type(auth_subject.subject)
@@ -110,14 +72,6 @@ def Authenticator(
     allowed_subjects: set[SubjectType] = SUBJECTS,
     required_scopes: set[Scope] | None = None,
 ) -> _Authenticator:
-    """
-    Here comes some blood magic 🧙‍♂️
-
-    Generate a version of `_Authenticator` with an overriden `__call__` signature.
-
-    By doing so, we can dynamically inject the required scopes into FastAPI
-    dependency, so they are properrly detected by the OpenAPI generator.
-    """
     parameters: list[Parameter] = [
         Parameter(name="self", kind=Parameter.POSITIONAL_OR_KEYWORD),
         Parameter(
@@ -125,13 +79,11 @@ def Authenticator(
             kind=Parameter.POSITIONAL_OR_KEYWORD,
             default=Security(
                 get_auth_subject,
-                scopes=sorted(
-                    [
-                        s.value
-                        for s in (required_scopes or {})
-                        if s not in RESERVED_SCOPES
-                    ]
-                ),
+                scopes=sorted([
+                    s.value
+                    for s in (required_scopes or {})
+                    if s not in RESERVED_SCOPES
+                ]),
             ),
         ),
     ]

@@ -27,3 +27,9 @@ class UserRead(UserBase, TimestampedSchema):
 
 class UserScopes(Schema):
     scopes: list[Scope]
+
+
+class UserCreate(UserBase): ...
+
+
+class UserUpdate(UserBase): ...

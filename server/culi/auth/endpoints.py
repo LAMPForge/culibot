@@ -13,10 +13,3 @@ async def logout() -> RedirectResponse:
     response = RedirectResponse(settings.FRONTEND_BASE_URL)
     AuthService.set_auth_cookie(response=response, value="", expires=0)
     return response
-
-
-@router.post("/auth/login")
-async def login() -> RedirectResponse:
-    response = RedirectResponse(settings.FRONTEND_BASE_URL)
-    AuthService.set_auth_cookie(response=response, value="123")
-    return response

@@ -1,9 +1,16 @@
 from datetime import datetime
 
+from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.responses import RedirectResponse
+
+from culi.common.http import get_safe_return_url
 from culi.common.schemas import Schema
 from fastapi import Request, Response
 
 from culi.config import settings
+from culi.models.user import User
+from culi.common.jwt import jwt
+from culi.user.services.user import user as user_service
 
 
 class LogoutResponse(Schema):
@@ -40,7 +47,6 @@ class AuthService:
                 },
                 secret=settings.SECRET,
                 expires_at=expires_at,
-                type="auth",
             ),
             expires_at,
         )
@@ -49,3 +55,31 @@ class AuthService:
     def generate_logout_response(cls, *, response: Response) -> LogoutResponse:
         cls.set_auth_cookie(response=response, value="", expires=0)
         return LogoutResponse(success=True)
+
+    @classmethod
+    def generate_login_cookie_response(
+        cls,
+        *,
+        request: Request,
+        user: User,
+        return_to: str | None = None,
+    ) -> RedirectResponse:
+        token, _ = cls.generate_token(user=user)
+
+        is_localhost = request.url.hostname in ["127.0.0.1", "localhost"]
+        secure = False if is_localhost else True
+
+        return_url = get_safe_return_url(return_to)
+        response = RedirectResponse(return_url, 303)
+        cls.set_auth_cookie(response=response, value=token, secure=secure)
+        return response
+
+    @classmethod
+    async def get_user_from_cookie(
+        cls, session: AsyncSession, *, cookie: str
+    ) -> User | None:
+        try:
+            decoded = jwt.decode_unsafe(token=cookie, secret=settings.SECRET)
+            return await user_service.get(session, id=decoded["user_id"])
+        except (KeyError, jwt.DecodeError, jwt.ExpiredSignatureError):
+            return None

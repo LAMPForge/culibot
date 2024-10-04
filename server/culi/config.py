@@ -58,6 +58,10 @@ class Settings(BaseSettings):
     DATABASE_SYNC_POOL_SIZE: int = 1  # Specific pool size for sync connection: since we only use it in OAuth2 router, don't waste resources.
     DATABASE_POOL_RECYCLE_SECONDS: int = 600  # 10 minutes
 
+    # Google
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+
     model_config = SettingsConfigDict(
         env_prefix="polar_",
         env_file_encoding="utf-8",

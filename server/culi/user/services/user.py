@@ -30,5 +30,22 @@ class UserService(ResourceService[User, UserCreate, UserUpdate]):
         res = await session.execute(query)
         return res.scalars().unique().one_or_none()
 
+    async def get_by_email_or_signup(
+        self,
+        session: AsyncSession,
+        email: str,
+    ) -> User:
+        _user = await self.get_by_email(session, email)
+        if _user is None:
+            _user = await self.signup_by_email(session, email)
+
+        return _user
+
+    @staticmethod
+    async def signup_by_email(session: AsyncSession, email: str) -> User:
+        _user = User(username=email, email=email)
+        session.add(_user)
+        await session.commit()
+        return _user
 
 user = UserService(User)

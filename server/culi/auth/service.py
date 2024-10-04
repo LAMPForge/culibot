@@ -9,7 +9,7 @@ from fastapi import Request, Response
 
 from culi.config import settings
 from culi.models.user import User
-from culi.common.jwt import jwt
+from culi.common import jwt
 from culi.user.services.user import user as user_service
 
 

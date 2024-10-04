@@ -3,8 +3,11 @@ from math import ceil
 from urllib.parse import urlencode
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
+
 from culi.auth_link.schemas import AuthLinkCreate, AuthLinkUpdate
 from culi.common.crypto import generate_token_hash_pair, get_token_hash
+from culi.common.ext.sqlalchemy import sql
 from culi.common.services import ResourceService
 from culi.common.utils import utc_now
 from culi.config import settings
@@ -20,6 +23,11 @@ TOKEN_PREFIX = "culi_"
 
 
 class AuthLinkError(CuliError): ...
+
+
+class InvalidAuthLink(AuthLinkError):
+    def __init__(self) -> None:
+        super().__init__("This auth link is invalid or has expired.", status_code=401)
 
 
 class AuthLinkService(ResourceService[AuthLink, AuthLinkCreate, AuthLinkUpdate]):
@@ -79,10 +87,10 @@ class AuthLinkService(ResourceService[AuthLink, AuthLinkCreate, AuthLinkUpdate])
 
     async def authenticate(self, session: AsyncSession, token: str) -> User:
         token_hash = get_token_hash(token, secret=settings.SECRET)
-        magic_link = await self._get_valid_magic_link_by_token_hash(session, token_hash)
+        magic_link = await self._get_valid_auth_link_by_token_hash(session, token_hash)
 
         if magic_link is None:
-            raise InvalidMagicLink()
+            raise InvalidAuthLink()
 
         user = magic_link.user
         if user is None:
@@ -97,5 +105,14 @@ class AuthLinkService(ResourceService[AuthLink, AuthLinkCreate, AuthLinkUpdate])
 
         return user
 
+    @staticmethod
+    async def _get_valid_auth_link_by_token_hash(session: AsyncSession, token_hash: str) -> AuthLink | None:
+        statement = (
+            sql.select(AuthLink)
+            .where(AuthLink.token_hash == token_hash, AuthLink.expires_at > utc_now())
+            .options(joinedload(AuthLink.user))
+        )
+        res = await session.execute(statement)
+        return res.scalars().unique().one_or_none()
 
 auth_link = AuthLinkService(AuthLink)

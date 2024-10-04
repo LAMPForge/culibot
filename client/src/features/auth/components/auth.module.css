@@ -1,0 +1,5 @@
+.container {
+    box-shadow: rgba(0, 0, 0, 0.07) 0px 2px 45px 4px;
+    border-radius: 4px;
+    background: light-dark(var(--mantine-color-body), rgba(0, 0, 0, 0.1));
+}

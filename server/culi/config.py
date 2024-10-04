@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     ALLOWED_HOSTS: set[str] = {"127.0.0.1:3000", "localhost:3000"}
 
     # Auth cookie
-    AUTH_COOKIE_KEY: str = "polar_session"
+    AUTH_COOKIE_KEY: str = "culi_session"
     AUTH_COOKIE_TTL_SECONDS: int = 60 * 60 * 24 * 31  # 31 days
     AUTH_COOKIE_DOMAIN: str = "127.0.0.1"
 
@@ -63,7 +63,7 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET: str = ""
 
     model_config = SettingsConfigDict(
-        env_prefix="polar_",
+        env_prefix="culi_",
         env_file_encoding="utf-8",
         case_sensitive=False,
         env_file=env_file,

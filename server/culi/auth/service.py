@@ -47,6 +47,7 @@ class AuthService:
                 },
                 secret=settings.SECRET,
                 expires_at=expires_at,
+                type="auth",
             ),
             expires_at,
         )

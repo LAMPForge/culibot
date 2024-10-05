@@ -1,5 +1,6 @@
 import {Helmet} from "react-helmet-async";
 import {LoginForm} from "@/features/auth/components/login-form.tsx";
+import {Container} from "@mantine/core";
 
 export default function LoginPage() {
   return (
@@ -7,7 +8,9 @@ export default function LoginPage() {
       <Helmet>
         <title>Login - Culibot</title>
       </Helmet>
-      <LoginForm />
+      <Container fluid style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <LoginForm />
+      </Container>
     </>
   )
 }

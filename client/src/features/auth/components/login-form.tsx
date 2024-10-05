@@ -1,8 +1,10 @@
-import {Box, Container, TextInput, Title, Button} from "@mantine/core";
+import {Text, TextInput, Button, Grid, Divider, Paper, Group} from "@mantine/core";
 import classes from "./auth.module.css";
 import { z } from 'zod';
 import { useForm, zodResolver } from '@mantine/form';
-import {IAuthLinkLogin} from "../types/auth.types.ts";
+import { IAuthLinkLogin } from "../types/auth.types.ts";
+import useAuth from "../hooks/use-auth.ts";
+import GoogleIcon from "../../../components/icons/icon-google.tsx";
 
 const formSchema = z.object({
   email: z
@@ -19,30 +21,42 @@ export function LoginForm() {
     },
   });
 
+  const { handleAuthLink, isLoading } = useAuth();
+
   async function onSubmit(data: IAuthLinkLogin) {
-    // await login(data);
+    await handleAuthLink(data);
   }
 
   return (
-    <Container size={420} my={40} className={classes.container}>
-      <Box p="xl" mt={200}>
-        <Title order={2} ta="center" fw={800} mb="md">
-          CULIBOT
-        </Title>
-        <form onSubmit={form.onSubmit(onSubmit)}>
-          <TextInput
-            id="email"
-            type="email"
-            label="Email"
-            placeholder="email@example.com"
-            variant="filled"
-            {...form.getInputProps("email")}
-          />
-          <Button type="submit" fullWidth mt="xl" loading={false}>
-            Sign In
-          </Button>
-        </form>
-      </Box>
-    </Container>
+    <Paper radius="md" p="xl" withBorder>
+      <Text size="lg" fw={500}>
+        Welcome to Culibot!
+      </Text>
+      <Group grow mb="md" mt="md">
+        <Button leftSection={<GoogleIcon />} variant="default">
+          Sign in with Google
+        </Button>
+      </Group>
+      <Divider label="Or continue with email" labelPosition="center" my="lg" />
+      <form onSubmit={form.onSubmit(onSubmit)}>
+        <Grid>
+          <Grid.Col span={8} pt={0}>
+            <TextInput
+              id="email"
+              type="email"
+              placeholder="email@example.com"
+              variant="filled"
+              className={classes["text-input"]}
+              {...form.getInputProps("email")}
+            />
+          </Grid.Col>
+          <Grid.Col span={4} pt={0}>
+            <Button type="submit" fullWidth className={classes.button} loading={isLoading}>
+              Sign In
+            </Button>
+          </Grid.Col>
+        </Grid>
+      </form>
+    </Paper>
   )
 }

@@ -3,7 +3,7 @@ import Cookies from "js-cookie";
 import APP_ROUTE from "./app-route.ts";
 
 const api: AxiosInstance = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_APP_URL + "/v1",
   withCredentials: true,
 });
 

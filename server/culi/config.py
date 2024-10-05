@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     # Emails
     EMAIL_SENDER: EmailSender = EmailSender.logger
     RESEND_API_KEY: str = ""
-    EMAIL_FROM_NAME: str = "Polar"
+    EMAIL_FROM_NAME: str = "Culi"
     EMAIL_FROM_EMAIL_ADDRESS: str = "culi@lampforge.com"
 
     BASE_URL: str = "http://127.0.0.1:8000/v1"

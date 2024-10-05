@@ -1,8 +1,11 @@
 const APP_ROUTE = {
-  HOME: '/home',
+  HOME: '/',
   AUTH: {
     LOGIN: '/login',
     SIGN_UP: '/sign-up',
+    AUTH_LINK: {
+      REQUEST: '/login/auth-link/request',
+    },
   }
 }
 

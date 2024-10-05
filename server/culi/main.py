@@ -112,35 +112,6 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(router)
 
-    frontend_dist_path = Path(__file__).parent.parent.parent / "client" / "dist"
-    if frontend_dist_path.exists():
-        index_file_path = frontend_dist_path / "index.html"
-
-        with open(index_file_path, "r", encoding="utf-8") as file:
-            html_content = file.read()
-
-        config_string = json.dumps({
-            "ENV": '',
-            "APP_URL": '',
-        })
-
-        window_var = "<!--window-config-->"
-        window_script_content = f"<script>window.CONFIG={config_string};</script>"
-        transformed_html = html_content.replace(window_var, window_script_content)
-
-        with open(index_file_path, "w", encoding="utf-8") as file:
-            file.write(transformed_html)
-
-        app.mount("/", StaticFiles(directory=str(frontend_dist_path), html=True), name="static")
-
-        @app.get("/{full_path:path}")
-        async def serve_react_app(request: Request, full_path: str):
-            if full_path.startswith("api/"):
-                raise HTTPException(status_code=404, detail="Not Found")
-            return FileResponse(str(index_file_path))
-    else:
-        log.warning(f"Frontend dist directory not found at {frontend_dist_path}")
-
     return app
 
 

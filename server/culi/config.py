@@ -27,8 +27,7 @@ class Settings(BaseSettings):
 
     # JSON list of accepted CORS origins
     CORS_ORIGINS: list[str] = []
-
-    ALLOWED_HOSTS: set[str] = {"127.0.0.1:3000", "localhost:3000"}
+    ALLOWED_HOSTS: set[str] = {"127.0.0.1:3000", "localhost:3000", "localhost:5173"}
 
     # Auth cookie
     AUTH_COOKIE_KEY: str = "culi_session"
